@@ -4,3 +4,5 @@ dist-types
 .DS_Store
 *.local
 .vercel
+supabase/.temp
+supabase/.branches
