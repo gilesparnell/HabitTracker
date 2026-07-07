@@ -150,8 +150,13 @@ export function loadData(storage: StorageLike): LoadResult {
   return parseStoredJSON(stored, 'Stored data')
 }
 
-export function saveData(storage: StorageLike, data: AppData): void {
-  storage.setItem(STORAGE_KEY, JSON.stringify(data))
+export function saveData(storage: StorageLike, data: AppData): boolean {
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify(data))
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function appendEvent(data: AppData, event: HabitEvent): AppData {
