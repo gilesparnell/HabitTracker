@@ -2,6 +2,21 @@
 
 Append newest-first handoff entries here with current state, runner, next step, and gotchas.
 
+## 2026-07-08 AEST — Unit 5 complete (migration applied LIVE) + collision cleanup
+**Runner:** Claude (apply/verify + cleanup), Codex (SQL authoring). **Next:** Unit 6 — email OTP auth module.
+
+Done:
+- `supabase/migrations/20260708_ht_initial.sql` + `supabase/README.md` committed (`5aea35d`).
+- **Migration APPLIED to live WLC project** (`lnnvwbqmpgusjoplvjjt`) via Management API. Verified by read-back: `ht_events` + `ht_habit_config` both exist with `rowsecurity=true`; policies exactly — `ht_events`: select+insert only (append-only confirmed, no update/delete), `ht_habit_config`: select/insert/update/delete own-rows.
+- **Shared magic-link email template patched** (HTTP 200, read-back verified): existing `{{ .ConfirmationURL }}` link preserved for WLC, added `{{ .Token }}` code block for HabitTracker's typed-code sign-in. `external_email_enabled=true`, `mailer_otp_exp=3600`.
+- Redirect-URL allowlist addition **deferred to Unit 11** — the Vercel project has no domains until first deploy, and the typed-code OTP flow doesn't require redirects.
+- Store test repair committed (`ac20553`): the two-executor collision had committed a truncated test file from a killed Codex run; replaced with real coverage of the actual API (20 store tests) and made `saveData` return success/failure instead of throwing on quota. Full suite 59/59 green, lint + build pass.
+- Collision cleanup: duplicate Vercel project `habit-tracker` deleted (`habittracker` prj_carWENFyCNJVUeZUWzUFute5nNqr is the only project, `.vercel/project.json` relinked); redundant classic branch protection removed — ruleset `main-protection` is the single source, effective rules verified intact after removal.
+
+Gotchas:
+- Supabase Management API blocks default urllib/python user agents (Cloudflare 1010) — use `curl -A "supabase-cli/2.98.2"`.
+- Giles morning checklist (queued): eyeball one WLC login email (template changed), live OTP round-trip on deployed app, iPhone A2HS, Unit 8 screenshot review.
+
 ## 2026-07-08 AEST — Unit 4 complete (local persistence)
 **Runner:** Codex. **Next:** Unit 5 — Supabase migration SQL and apply/verify documentation.
 
