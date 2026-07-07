@@ -13,6 +13,16 @@ Each entry is split into:
 
 ---
 
+## [0.2.0] — 2026-07-08
+
+### What's new
+- Habit data now survives refreshes and can be exported or restored from a backup file.
+- Damaged local data now falls back to a clean start with a warning instead of crashing the app.
+
+### Under the hood
+- Added the Unit 4 local persistence API in `src/store/schema.ts` and `src/store/local.ts`, including schema-version validation, defensive JSON import, dirty-event tracking, config LWW updates, session storage, sync cursor storage, and device-only milestone state.
+- Added test-first Vitest coverage in `src/store/local.test.ts` using a Map-backed `StorageLike` fake rather than browser `localStorage`.
+
 ## [0.1.0] — 2026-07-08
 
 ### What's new

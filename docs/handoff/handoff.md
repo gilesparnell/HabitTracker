@@ -2,6 +2,19 @@
 
 Append newest-first handoff entries here with current state, runner, next step, and gotchas.
 
+## 2026-07-08 AEST — Unit 4 complete (local persistence)
+**Runner:** Codex. **Next:** Unit 5 — Supabase migration SQL and apply/verify documentation.
+
+Done:
+- Added the versioned local store schema and `emptyData()` defaults in `src/store/schema.ts`.
+- Added defensive local persistence, backup import/export, dirty-event tracking, config LWW upsert, session, sync cursor, and device milestone mutators in `src/store/local.ts`.
+- Added test-first coverage in `src/store/local.test.ts` with a Map-backed fake `StorageLike`; RED was confirmed before implementation and GREEN after.
+- Bumped the app version to `0.2.0` and added the Unit 4 changelog entry.
+
+Gotchas:
+- `loadData()` and `importJSON()` intentionally discard corrupt or unknown-version stored data for schema v1 and return `emptyData()` with a warning.
+- Unit 4 is storage-only; manual browser checks for hard-refresh retention and corrupt stored JSON still belong with the later UI wiring.
+
 ## 2026-07-08 AEST — Unit 3 Phase A complete (domain red suite + throwing stubs)
 **Runner:** Codex. **Next:** Unit 3 Phase B — replace the `not implemented` domain stubs with real pure-function logic until `npx vitest run src/domain` is green.
 
