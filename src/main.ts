@@ -2,11 +2,12 @@ import './styles/main.css'
 import { createClient } from '@supabase/supabase-js'
 import { todayLocalISO } from './domain/calendar'
 import type { Habit } from './domain/events'
-import { appendEvent, loadData, saveData, setSession, type StorageLike } from './store/local'
+import { appendEvent, loadData, saveData, setDeviceMilestone, setSession, type StorageLike } from './store/local'
 import type { AppData } from './store/schema'
 import { restoreSession } from './auth/otp'
 import { syncOnce } from './sync/engine'
 import { createSupabaseTransport, type SyncTransport } from './sync/transport'
+import { celebrationFor, showMadeItThroughNote, showMilestoneCelebration } from './ui/celebrate'
 import { flashAck, renderApp, type Handlers } from './ui/render'
 import { openSettingsSheet } from './ui/settings'
 import { runFirstRun, runReauth, type SetupDeps } from './ui/setup'
@@ -75,17 +76,32 @@ function boot(appRoot: HTMLElement, store: StorageLike): void {
 
   const handlers: Handlers = {
     onAnswerClean(habit: Habit, kind: 'daily' | 'catchup'): void {
-      update(
-        appendEvent(data, {
-          id: crypto.randomUUID(),
-          user_id: data.session?.userId ?? 'local',
-          habit,
-          type: 'checkin',
-          kind,
-          event_date: todayLocalISO(),
-          recorded_at: new Date().toISOString(),
-        }),
-      )
+      const now = new Date()
+      const todayISO = todayLocalISO(now)
+      const next = appendEvent(data, {
+        id: crypto.randomUUID(),
+        user_id: data.session?.userId ?? 'local',
+        habit,
+        type: 'checkin',
+        kind,
+        event_date: todayISO,
+        recorded_at: now.toISOString(),
+      })
+      const celebration = celebrationFor(next, habit, todayISO, now)
+
+      if (celebration.milestone !== null) {
+        update(setDeviceMilestone(next, habit, celebration.milestone))
+        showMilestoneCelebration(appRoot, celebration.milestone)
+        return
+      }
+
+      update(next)
+
+      if (celebration.madeItThrough) {
+        showMadeItThroughNote(appRoot)
+        return
+      }
+
       flashAck(appRoot, habit)
     },
 
