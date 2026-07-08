@@ -57,11 +57,11 @@ function authCodeScreen(root: HTMLElement, email: string, onSubmit: (code: strin
   root.innerHTML = `
     <section class="setup-panel" aria-labelledby="setup-title">
       <p class="kicker">Check your email</p>
-      <h1 id="setup-title">Enter the 6-digit code</h1>
+      <h1 id="setup-title">Enter the code from your email</h1>
       <p class="setup-copy">Sent to ${esc(email)}.</p>
       ${error ? `<p class="setup-error" role="alert">${esc(error)}</p>` : ''}
       <label class="field-label" for="setup-code">Code</label>
-      <input class="code-input" id="setup-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" />
+      <input class="code-input" id="setup-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" pattern="[0-9]*" />
       <div class="setup-actions">
         <button class="setup-secondary" data-code-back>Back</button>
         <button class="setup-primary" data-code-next>Verify</button>
