@@ -13,9 +13,10 @@ Each entry is split into:
 
 ---
 
-## [0.3.0] — 2026-07-08
+## [0.3.0 → 0.3.1] — 2026-07-08
 
 ### What's new
+- Fixed: sign-in codes now fit the input — the field was clamped to 6 digits while this project issues 8-digit codes, so every code was silently truncated and rejected.
 - The app is now a real, installable habit tracker: two large day counters — nicotine-free and alcohol-free — with your own motivational line under each.
 - Opening the app starts with the daily check-in: one honest yes/no per habit, covering the time since you last answered. Miss a few days and a single question covers the gap.
 - Slips are handled with dignity: pick the date it happened, confirm, and only the current count restarts — your longest streak and total clean days are always kept. Logged a slip by mistake? Undo it from settings.
