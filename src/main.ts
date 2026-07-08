@@ -34,15 +34,39 @@ function boot(appRoot: HTMLElement, store: StorageLike): void {
   let warning: string | null = loaded.warning
   let reauthRequired = false
   let syncRun = 0
-  const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: false,
-    },
-  })
-  const transport: SyncTransport = createSupabaseTransport(supabase as unknown as Parameters<typeof createSupabaseTransport>[0])
+  // Cloud is optional at boot: a missing/invalid configuration must never block
+  // local check-ins. Everything degrades to the same offline paths used when
+  // the network is down.
+  let supabase: ReturnType<typeof createClient> | null = null
+  try {
+    supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: false,
+      },
+    })
+  } catch {
+    supabase = null
+  }
+
+  const offlineError = (): Error => new Error('Cloud backup is not configured on this build.')
+  const transport: SyncTransport = supabase
+    ? createSupabaseTransport(supabase as unknown as Parameters<typeof createSupabaseTransport>[0])
+    : {
+        pushEvents: () => Promise.resolve({ ok: false, insertedIds: [], error: offlineError().message }),
+        pullEvents: () => Promise.resolve({ ok: false, events: [], nextCursor: null, error: offlineError().message }),
+        pushConfig: () => Promise.resolve({ ok: false, error: offlineError().message }),
+        pullConfig: () => Promise.resolve({ ok: false, config: [], error: offlineError().message }),
+      }
+  const authClient: SetupDeps['authClient'] = supabase
+    ? (supabase.auth as SetupDeps['authClient'])
+    : {
+        signInWithOtp: () => Promise.resolve({ data: {}, error: offlineError() }),
+        verifyOtp: () => Promise.resolve({ data: { session: null }, error: offlineError() }),
+        setSession: () => Promise.resolve({ data: { session: null }, error: offlineError() }),
+      }
   const deps: SetupDeps = {
-    authClient: supabase.auth,
+    authClient,
     transport,
   }
 
@@ -131,7 +155,7 @@ function boot(appRoot: HTMLElement, store: StorageLike): void {
         onData: update,
         onImport: update,
         onReauth(): void {
-          runReauth(appRoot, { authClient: supabase.auth }, (session) => {
+          runReauth(appRoot, { authClient }, (session) => {
             reauthRequired = false
             update(setSession(data, session))
           })
@@ -156,7 +180,7 @@ function boot(appRoot: HTMLElement, store: StorageLike): void {
   rerender()
 
   if (data.session !== null) {
-    void restoreSession(supabase.auth, data.session).then((result) => {
+    void restoreSession(authClient, data.session).then((result) => {
       if (result.ok) {
         update(setSession(data, result.session))
         return
