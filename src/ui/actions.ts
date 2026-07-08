@@ -76,3 +76,10 @@ export function initDeviceMilestones(data: AppData, foldResult: FoldResult): App
     data,
   )
 }
+
+// Codes are digits-only; length is capped to match the input's maxlength.
+// Never assume a specific code length — the shared Supabase project issues
+// 8-digit codes, not the 6-digit default (see fix history for v0.3.1/0.3.2).
+export function normalizeOtpCode(raw: string): string {
+  return raw.replace(/\D/g, '').slice(0, 12)
+}

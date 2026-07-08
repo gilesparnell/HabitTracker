@@ -3,7 +3,7 @@ import { fold } from '../domain/fold'
 import type { HabitEvent } from '../domain/events'
 import { appendEvent, setDeviceMilestone, upsertConfig } from '../store/local'
 import { emptyData, type AppData } from '../store/schema'
-import { correctStartDate, initDeviceMilestones, setMotivation, undoLastRelapse } from './actions'
+import { correctStartDate, initDeviceMilestones, setMotivation, undoLastRelapse , normalizeOtpCode } from './actions'
 
 function event(overrides: Partial<HabitEvent> & Pick<HabitEvent, 'id' | 'habit' | 'type'>): HabitEvent {
   return {
@@ -155,5 +155,19 @@ describe('initDeviceMilestones', () => {
 
     expect(next.device.lastCelebratedMilestone.vape).toBe(7)
     expect(next.device.lastCelebratedMilestone.drink).toBe(365)
+  })
+})
+
+describe('normalizeOtpCode', () => {
+  it('preserves a full 8-digit code (regression: handler truncated to 6)', () => {
+    expect(normalizeOtpCode('76938237')).toBe('76938237')
+  })
+
+  it('strips spaces and non-digits from pasted codes', () => {
+    expect(normalizeOtpCode(' 7693 8237\n')).toBe('76938237')
+  })
+
+  it('caps at 12 digits, matching the input maxlength', () => {
+    expect(normalizeOtpCode('1234567890123456')).toBe('123456789012')
   })
 })
