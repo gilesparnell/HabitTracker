@@ -1,7 +1,7 @@
 ---
 title: "feat: Sobriety habit tracker PWA (vaping + drinking day counters)"
 type: feat
-status: active
+status: completed
 date: 2026-07-08
 origin: docs/brainstorms/2026-07-07-sobriety-habit-tracker-requirements.md
 ---
