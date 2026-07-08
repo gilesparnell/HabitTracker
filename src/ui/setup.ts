@@ -8,7 +8,7 @@ import type { AuthClient } from '../auth/client'
 import { mergeEvents, resolveStartupState, syncOnce } from '../sync/engine'
 import type { SyncTransport } from '../sync/transport'
 import { DEFAULT_MOTIVATION, HABIT_LABELS } from './viewmodel'
-import { initDeviceMilestones } from './actions'
+import { initDeviceMilestones, normalizeOtpCode } from './actions'
 
 export interface SetupDeps {
   authClient: AuthClient
@@ -74,7 +74,7 @@ function authCodeScreen(root: HTMLElement, email: string, onSubmit: (code: strin
   root.querySelector('[data-code-back]')?.addEventListener('click', onBack)
   root.querySelector('[data-code-next]')?.addEventListener('click', () => onSubmit(input?.value.trim() ?? ''))
   input?.addEventListener('input', () => {
-    input.value = input.value.replace(/\D/g, '').slice(0, 6)
+    input.value = normalizeOtpCode(input.value)
   })
   input?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
