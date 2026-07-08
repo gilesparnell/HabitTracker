@@ -20,6 +20,14 @@ if (root !== null) {
   boot(root, storage)
 }
 
+if ('serviceWorker' in navigator && (import.meta.env as { readonly PROD?: boolean }).PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Installability must not affect the tracker itself.
+    })
+  })
+}
+
 function boot(appRoot: HTMLElement, store: StorageLike): void {
   const loaded = loadData(store)
   let data: AppData = loaded.data
