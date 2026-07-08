@@ -2,6 +2,23 @@
 
 Append newest-first handoff entries here with current state, runner, next step, and gotchas.
 
+## 2026-07-08 AEST — Units 6–10 complete; PR #1 ready; merge + deploy in progress
+**Runner:** Codex (units, from Claude specs) + Claude (design, verification, infra). **Next:** merge PR #1 on green CI → verify production → add real domains to Supabase redirect allowlist → Giles's human checks.
+
+Done since last entry:
+- Unit 6 auth (`ad45300`), Unit 7 sync + restore gate (`038e425`), Unit 8 UI both halves (`62085af`, `a135954`), Unit 9 celebrations (`941d704`), Unit 10 PWA (`eb10f96`), all TDD-verified; suite 98/98.
+- CI timezone bug fixed (`18c3ec1`): suite pinned to Australia/Sydney — CI runners are UTC and sat on the wrong calendar day. Verified by running the suite under `TZ=UTC` locally.
+- Boot-resilience fix: eager `createClient` with missing env killed the app before first render (black screen, found via screenshot verification against the production build). Boot now degrades to offline-only when cloud config is absent/invalid. `.env.local` (gitignored) added for local preview parity.
+- Built-SW verification: service worker ACTIVE with `ht-shell-v1` cache populated on the production preview; manifest + sw served 200.
+- v0.3.0 CHANGELOG entry covering the whole PR; screenshots committed under `docs/screenshots/`.
+
+Gotchas for future sessions:
+- Codex sandbox has no npm network — install deps from the main session before/after delegation.
+- Codex background-task exit may not fire a wake-up: poll the PID or watch for a printed completion marker.
+- Vercel CLI non-interactive quirks documented in decisions.md; use the REST API for preview env vars.
+
+Giles morning checklist (human-only, post-merge): live OTP round-trip on production, iPhone Add-to-Home-Screen + offline open, eyeball one WLC login email, review docs/screenshots/.
+
 ## 2026-07-08 AEST — Unit 5 complete (migration applied LIVE) + collision cleanup
 **Runner:** Claude (apply/verify + cleanup), Codex (SQL authoring). **Next:** Unit 6 — email OTP auth module.
 
