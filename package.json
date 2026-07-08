@@ -1,6 +1,6 @@
 {
   "name": "habittracker",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,5 +15,8 @@
     "typescript": "^5.5.4",
     "vite": "^5.4.0",
     "vitest": "^2.0.5"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.1"
   }
 }
