@@ -1,5 +1,6 @@
 import type { HabitEvent } from '../domain/events'
 import type { HabitConfig } from '../store/schema'
+import { normalizeEvent } from '../store/local'
 
 export interface SyncTransport {
   pushEvents(events: HabitEvent[]): Promise<{ ok: boolean; insertedIds: string[]; error?: string }>
@@ -92,7 +93,7 @@ export function createSupabaseTransport(client: SupabaseLike): SyncTransport {
         sinceCursor,
       )
 
-      return { ok: true, events, nextCursor }
+      return { ok: true, events: events.map(normalizeEvent), nextCursor }
     },
 
     async pushConfig(config) {
