@@ -111,6 +111,8 @@ export function renderApp(root: HTMLElement, model: ScreenModel, handlers: Handl
     ${model.prompt ? checkinSheet(model.prompt, answeredToday, 2) : ''}
   `
 
+  animateCounts(root)
+
   root.querySelector('[data-menu]')?.addEventListener('click', () => handlers.onOpenSettings())
 
   const prompt = model.prompt
@@ -144,6 +146,32 @@ export function openRelapseSheet(root: HTMLElement, habit: Habit, handlers: Hand
     const dateISO = input?.value || todayLocalISO()
     overlay.remove()
     handlers.onRelapseConfirmed(habit, dateISO)
+  })
+}
+
+function animateCounts(root: HTMLElement): void {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return
+  }
+
+  const ease = (t: number): number => 1 - Math.pow(1 - t, 3)
+
+  root.querySelectorAll<HTMLElement>('.count .num').forEach((el, index) => {
+    const target = Number(el.textContent) || 0
+    el.textContent = '0'
+    const duration = 1400
+
+    window.setTimeout(() => {
+      const start = performance.now()
+      const step = (now: number): void => {
+        const t = Math.min(1, (now - start) / duration)
+        el.textContent = Math.round(ease(t) * target).toString()
+        if (t < 1) {
+          requestAnimationFrame(step)
+        }
+      }
+      requestAnimationFrame(step)
+    }, 120 + index * 110)
   })
 }
 
