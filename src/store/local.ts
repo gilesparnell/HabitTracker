@@ -49,6 +49,12 @@ function isSession(value: unknown): value is StoredSession | null {
   )
 }
 
+function isAbsent(value: unknown): boolean {
+  // Locally-created events omit optional fields; rows restored from Postgres
+  // carry explicit nulls. Both mean "not set".
+  return value === undefined || value === null
+}
+
 function isHabitEvent(value: unknown): value is HabitEvent {
   if (!isRecord(value)) {
     return false
@@ -62,10 +68,33 @@ function isHabitEvent(value: unknown): value is HabitEvent {
     EVENT_TYPES.has(value.type) &&
     isStringOrNull(value.event_date) &&
     typeof value.recorded_at === 'string' &&
-    (value.kind === undefined || (typeof value.kind === 'string' && CHECKIN_KINDS.has(value.kind))) &&
-    (value.target_id === undefined || typeof value.target_id === 'string') &&
-    (value.created_at === undefined || typeof value.created_at === 'string')
+    (isAbsent(value.kind) || (typeof value.kind === 'string' && CHECKIN_KINDS.has(value.kind))) &&
+    (isAbsent(value.target_id) || typeof value.target_id === 'string') &&
+    (isAbsent(value.created_at) || typeof value.created_at === 'string')
   )
+}
+
+export function normalizeEvent(event: HabitEvent): HabitEvent {
+  const normalized: HabitEvent = {
+    id: event.id,
+    user_id: event.user_id,
+    habit: event.habit,
+    type: event.type,
+    event_date: event.event_date ?? null,
+    recorded_at: event.recorded_at,
+  }
+
+  if (event.kind !== undefined && event.kind !== null) {
+    normalized.kind = event.kind
+  }
+  if (event.target_id !== undefined && event.target_id !== null) {
+    normalized.target_id = event.target_id
+  }
+  if (event.created_at !== undefined && event.created_at !== null) {
+    normalized.created_at = event.created_at
+  }
+
+  return normalized
 }
 
 function isHabitConfig(value: unknown): value is HabitConfig {
@@ -116,7 +145,7 @@ function parseAppData(value: unknown): AppData | null {
 
   return {
     schemaVersion: value.schemaVersion,
-    events: value.events,
+    events: value.events.map(normalizeEvent),
     config: value.config,
     device: value.device,
     session: value.session,

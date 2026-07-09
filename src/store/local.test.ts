@@ -229,3 +229,47 @@ describe('export / import', () => {
     expect(result.warning).not.toBeNull()
   })
 })
+
+describe('loadData with cloud-restored rows (regression: phone sign-out loop)', () => {
+  it('accepts events whose optional fields are explicit nulls from Postgres', () => {
+    // Cloud-pulled rows carry kind: null / target_id: null; locally-created
+    // events omit them. Both must survive a save/load round-trip.
+    const storage = new MemoryStorage()
+    const stored = {
+      ...emptyData(),
+      events: [
+        {
+          id: 'e1',
+          user_id: 'u1',
+          habit: 'vape',
+          type: 'start',
+          event_date: '2026-06-01',
+          kind: null,
+          target_id: null,
+          recorded_at: '2026-06-01T09:00:00+10:00',
+          created_at: '2026-06-01T09:00:01+10:00',
+        },
+      ],
+    }
+    storage.values.set(STORAGE_KEY, JSON.stringify(stored))
+
+    const result = loadData(storage)
+
+    expect(result.warning).toBeNull()
+    expect(result.data.events).toHaveLength(1)
+    expect(result.data.events[0].id).toBe('e1')
+    expect(result.data.events[0].kind).toBeUndefined()
+    expect(result.data.events[0].target_id).toBeUndefined()
+  })
+
+  it('still rejects events with genuinely invalid kind values', () => {
+    const storage = new MemoryStorage()
+    const stored = { ...emptyData(), events: [{ ...event({ id: 'e1' }), kind: 'weekly' }] }
+    storage.values.set(STORAGE_KEY, JSON.stringify(stored))
+
+    const result = loadData(storage)
+
+    expect(result.data).toEqual(emptyData())
+    expect(result.warning).not.toBeNull()
+  })
+})

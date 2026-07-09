@@ -13,9 +13,10 @@ Each entry is split into:
 
 ---
 
-## [0.3.0 → 0.3.2] — 2026-07-08
+## [0.3.0 → 0.3.3] — 2026-07-08/09
 
 ### What's new
+- Fixed (0.3.3): phones no longer sign you out on every relaunch — data restored from the cloud was being wrongly rejected as invalid the next time the app opened.
 - Fixed (fully, in 0.3.2): sign-in codes were still being clipped to 6 digits by an input handler even after the field itself was widened — the field was clamped to 6 digits while this project issues 8-digit codes, so every code was silently truncated and rejected.
 - The app is now a real, installable habit tracker: two large day counters — nicotine-free and alcohol-free — with your own motivational line under each.
 - Opening the app starts with the daily check-in: one honest yes/no per habit, covering the time since you last answered. Miss a few days and a single question covers the gap.
@@ -26,6 +27,7 @@ Each entry is split into:
 - Works fully offline; everything syncs when you're back on a connection.
 
 ### Under the hood
+- 0.3.3: Postgres returns explicit `null` for unset optional columns while locally-created events omit them; the stored-data validator only accepted absence. Cloud-restored events now normalize `null` → absent at both the sync boundary (`src/sync/transport.ts`) and load time (`src/store/local.ts`), with regression tests.
 - Event-sourced core: an append-only event log is the sole source of truth; all counters derive from a pure fold (`src/domain/`). Sync is union-by-id (`src/sync/`) — conflict-free by construction, with a restore-before-setup gate preventing a fresh device from clobbering cloud data.
 - Local-first storage (`src/store/`) with schema-versioned localStorage, quota-safe saves, and JSON export/import.
 - Supabase (shared whole-life-challenge project, `ht_`-prefixed tables, append-only RLS) via typed-code email OTP — chosen over magic links because iOS PWAs have partitioned storage from Safari.
