@@ -13,6 +13,18 @@ Each entry is split into:
 
 ---
 
+## [0.3.4] — 2026-07-09
+
+### What's new
+- Rainbow Aurora theme: vibrant animated gradient background with living colour shifts. Per-habit cards now glow with habit-specific coloured glass (teal/cyan for nicotine, magenta/orange for alcohol). Primary action button is now a vivid teal-to-cyan gradient.
+- Milestone celebrations now rain confetti: 70 CSS-animated pieces falling continuously until dismissed, replacing the canvas engine.
+- Day counter numbers now count up from 0 on app load with easing, creating a satisfying entry animation.
+
+### Under the hood
+- CSS theme system overhauled: moved from cool-teal glass palette to deep-purple base with 15s aurora-shift animation (`src/styles/main.css`).
+- Confetti celebration swapped canvas `Particle` engine for CSS rain (`src/ui/celebrate.ts` unchanged structurally; CSS in `main.css` replaced `.confetti-canvas` with `.confetti-rain` + `.confetti-piece` + `@keyframes confetti-fall`).
+- Added `animateCounts()` helper in `src/ui/render.ts` with cubic-ease easing and staggered timing; respects `prefers-reduced-motion`.
+
 ## [0.3.0 → 0.3.3] — 2026-07-08/09
 
 ### What's new
@@ -27,7 +39,7 @@ Each entry is split into:
 - Works fully offline; everything syncs when you're back on a connection.
 
 ### Under the hood
-- 0.3.3: Postgres returns explicit `null` for unset optional columns while locally-created events omit them; the stored-data validator only accepted absence. Cloud-restored events now normalize `null` → absent at both the sync boundary (`src/sync/transport.ts`) and load time (`src/store/local.ts`), with regression tests.
+- 0.3.3: Postgres returns explicit `null` for unset optional columns while locally-created events omit them; the stored-data validator only accepted absence. Cloud-restored events now normalise `null` → absent at both the sync boundary (`src/sync/transport.ts`) and load time (`src/store/local.ts`), with regression tests.
 - Event-sourced core: an append-only event log is the sole source of truth; all counters derive from a pure fold (`src/domain/`). Sync is union-by-id (`src/sync/`) — conflict-free by construction, with a restore-before-setup gate preventing a fresh device from clobbering cloud data.
 - Local-first storage (`src/store/`) with schema-versioned localStorage, quota-safe saves, and JSON export/import.
 - Supabase (shared whole-life-challenge project, `ht_`-prefixed tables, append-only RLS) via typed-code email OTP — chosen over magic links because iOS PWAs have partitioned storage from Safari.
