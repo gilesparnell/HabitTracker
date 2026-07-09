@@ -2,6 +2,25 @@
 
 Append newest-first handoff entries here with current state, runner, next step, and gotchas.
 
+## 2026-07-09 AEST — v0.3.3 live; post-ship bug saga resolved; custom domain pending DNS
+**Runner:** Claude (diagnosis + fixes). **Next:** Giles confirms phone persistence on v0.3.3; Porkbun A record (habits -> 76.76.21.21) propagates -> https://habits.parnellsystems.com.
+
+Shipped since launch (all via PR, merged on green):
+- 0.3.1 (`PR #3`): OTP input maxlength 6 -> 12 (project issues 8-digit codes, not Supabase's default 6).
+- 0.3.2 (`PR #4`): the REAL truncation fix — a JS input handler still sliced codes to 6 digits; caught via DevTools payload (`token: "769382"` for code `76938237`). `normalizeOtpCode` + regression tests.
+- 0.3.3 (`PR #5`): phone sign-out loop — Postgres nulls in optional event fields (`kind`, `target_id`) failed the stored-data validator, so cloud-RESTORED devices wiped their own save on every relaunch ("Stored data is not valid HabitTracker data"). First devices (local-born events) unaffected — why the Mac worked and the phone looped. Normalized at transport pull + load, regression tests.
+
+Live infra changes (audit trail):
+- Signup-confirmation email template: added {{ .Token }} alongside link (Jackie/new-user path). Magic-link template already done. Both verified by read-back.
+- Redirect allowlist now includes habittracker prod/preview + https://habits.parnellsystems.com/** (WLC entries preserved).
+- Custom domain habits.parnellsystems.com attached to Vercel project; waiting on Porkbun A record (76.76.21.21) from Giles.
+
+Gotchas:
+- Shared project email rate limit is 2/hour across HabitTracker + WLC + all users. Custom SMTP (Resend) is the queued fix if sharing expands beyond Jackie.
+- iOS: Safari tabs / Chrome / installed PWA are separate storage containers — sign-in must happen inside the installed icon app.
+- This Claude session could not receive images; all debugging was via user-pasted text (DevTools payload/error text) — which worked well.
+- Giles is signed in on Mac; phone needs ONE fresh sign-in on v0.3.3 to confirm the loop is dead. Jackie onboards at the new domain once DNS lands.
+
 ## 2026-07-08 AEST — Units 6–10 complete; PR #1 ready; merge + deploy in progress
 **Runner:** Codex (units, from Claude specs) + Claude (design, verification, infra). **Next:** merge PR #1 on green CI → verify production → add real domains to Supabase redirect allowlist → Giles's human checks.
 
