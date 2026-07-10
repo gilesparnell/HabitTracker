@@ -128,4 +128,46 @@ describe('buildScreenModel', () => {
     expect(buildScreenModel(data, FRIDAY_EVENING).supportLine).not.toBeNull()
     expect(buildScreenModel(data, TUESDAY).supportLine).toBeNull()
   })
+
+  it('suppresses prompt when configured check-in time has not been reached', () => {
+    // 2026-07-08 at 06:00 (before default 07:00)
+    const earlyMorning = new Date('2026-07-08T06:00:00+10:00')
+    const data: AppData = {
+      ...withEvents([event({ id: 's1', habit: 'vape', type: 'start', event_date: '2026-07-07' })]),
+      config: [{ habit: 'vape', motivationalText: 'Test', checkInTime: '07:00', updatedAt: '2026-07-08T00:00:00+10:00' }],
+    }
+
+    const model = buildScreenModel(data, earlyMorning)
+    expect(model.prompt).toBeNull()
+  })
+
+  it('shows prompt after configured check-in time is reached', () => {
+    // 2026-07-08 at 07:00 (at configured time)
+    const atConfiguredTime = new Date('2026-07-08T07:00:00+10:00')
+    const data: AppData = {
+      ...withEvents([event({ id: 's1', habit: 'vape', type: 'start', event_date: '2026-07-07' })]),
+      config: [{ habit: 'vape', motivationalText: 'Test', checkInTime: '07:00', updatedAt: '2026-07-08T00:00:00+10:00' }],
+    }
+
+    const model = buildScreenModel(data, atConfiguredTime)
+    expect(model.prompt?.habit).toBe('vape')
+  })
+
+  it('respects per-habit configured times when multiple habits have different times', () => {
+    // 2026-07-08 at 07:30 (past vape time 07:00, before drink time 08:00)
+    const time730 = new Date('2026-07-08T07:30:00+10:00')
+    const data: AppData = {
+      ...withEvents([
+        event({ id: 's1', habit: 'vape', type: 'start', event_date: '2026-07-07' }),
+        event({ id: 's2', habit: 'drink', type: 'start', event_date: '2026-07-07' }),
+      ]),
+      config: [
+        { habit: 'vape', motivationalText: 'Test', checkInTime: '07:00', updatedAt: '2026-07-08T00:00:00+10:00' },
+        { habit: 'drink', motivationalText: 'Test', checkInTime: '08:00', updatedAt: '2026-07-08T00:00:00+10:00' },
+      ],
+    }
+
+    const model = buildScreenModel(data, time730)
+    expect(model.prompt?.habit).toBe('vape')
+  })
 })

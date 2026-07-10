@@ -65,7 +65,9 @@ export function buildScreenModel(data: AppData, now?: Date): ScreenModel {
 
   if (!needsSetup) {
     for (const habit of HABITS) {
-      const status = checkinStatus(folded[habit], todayISO)
+      const configured = data.config.find((item) => item.habit === habit)
+      const checkInTime = configured?.checkInTime
+      const status = checkinStatus(folded[habit], todayISO, now, checkInTime)
 
       if (status !== 'none') {
         prompt = {

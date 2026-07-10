@@ -232,3 +232,77 @@ describe('foldHabit', () => {
     expect(checkinStatus(state, '2026-07-08')).toBe('none')
   })
 })
+
+describe('checkinStatus with time threshold', () => {
+  it('returns standard when current time is after configured check-in time on new day', () => {
+    const state = stateForStatus('2026-07-07')
+    // Today is 2026-07-08 at 08:00, configured time is 07:00
+    const now = new Date('2026-07-08T08:00:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', now, '07:00')).toBe('standard')
+  })
+
+  it('returns none when current time is before configured check-in time, no check-in yet today', () => {
+    const state = stateForStatus('2026-07-07')
+    // Today is 2026-07-08 at 06:00, configured time is 07:00
+    const now = new Date('2026-07-08T06:00:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', now, '07:00')).toBe('none')
+  })
+
+  it('returns none when already checked in today, regardless of time', () => {
+    const state = stateForStatus('2026-07-08')
+    // Even though current time is 08:00 (after 07:00), already checked in
+    const now = new Date('2026-07-08T08:00:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', now, '07:00')).toBe('none')
+  })
+
+  it('uses default time 07:00 when no configured time provided', () => {
+    const state = stateForStatus('2026-07-07')
+    // Current time 06:00 (before default 07:00)
+    const now = new Date('2026-07-08T06:00:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', now)).toBe('none')
+
+    // Current time 07:00 (at default)
+    const nowAt07 = new Date('2026-07-08T07:00:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', nowAt07)).toBe('standard')
+  })
+
+  it('returns catchup when multiple days missed and current time after threshold', () => {
+    const state = stateForStatus('2026-07-05') // 3 days ago
+    // Today is 2026-07-08 at 08:00, configured time is 07:00
+    const now = new Date('2026-07-08T08:00:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', now, '07:00')).toBe('catchup')
+  })
+
+  it('handles midnight boundary: 23:00 check-in time', () => {
+    const state = stateForStatus('2026-07-07')
+    // Today is 2026-07-08 at 22:59, configured time is 23:00
+    const before = new Date('2026-07-08T22:59:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', before, '23:00')).toBe('none')
+
+    // Today is 2026-07-08 at 23:00, configured time is 23:00
+    const atTime = new Date('2026-07-08T23:00:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', atTime, '23:00')).toBe('standard')
+
+    // Today is 2026-07-08 at 23:30, configured time is 23:00
+    const after = new Date('2026-07-08T23:30:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', after, '23:00')).toBe('standard')
+  })
+
+  it('handles exact hour boundary at midnight (00:00 check-in time)', () => {
+    const state = stateForStatus('2026-07-07')
+    // Today is 2026-07-08 at 00:00 (midnight), configured time is 00:00
+    const atMidnight = new Date('2026-07-08T00:00:00+10:00')
+    expect(checkinStatus(state, '2026-07-08', atMidnight, '00:00')).toBe('standard')
+
+    // At 23:59 previous day, should not prompt (still before midnight)
+    const beforeMidnight = new Date('2026-07-07T23:59:00+10:00')
+    expect(checkinStatus(state, '2026-07-07', beforeMidnight, '00:00')).toBe('none')
+  })
+
+  it('handles invalid time format by using default 07:00', () => {
+    const state = stateForStatus('2026-07-07')
+    const now = new Date('2026-07-08T08:00:00+10:00')
+    // Invalid time format should fall back to default
+    expect(checkinStatus(state, '2026-07-08', now, 'invalid')).toBe('standard')
+  })
+})

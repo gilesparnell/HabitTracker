@@ -3,7 +3,7 @@ import { HABITS, type Habit, type HabitEvent } from '../domain/events'
 import { todayLocalISO } from '../domain/calendar'
 import { exportJSON, importJSON } from '../store/local'
 import type { AppData } from '../store/schema'
-import { correctStartDate, setMotivation, undoLastRelapse } from './actions'
+import { correctStartDate, setMotivation, setCheckInTime, undoLastRelapse } from './actions'
 import { HABIT_LABELS } from './viewmodel'
 import { versionLabel } from '../version'
 
@@ -48,6 +48,10 @@ function configText(data: AppData, habit: Habit): string {
   return data.config.find((item) => item.habit === habit)?.motivationalText ?? ''
 }
 
+function checkInTime(data: AppData, habit: Habit): string {
+  return data.config.find((item) => item.habit === habit)?.checkInTime ?? '07:00'
+}
+
 function habitSettings(data: AppData, habit: Habit): string {
   const today = todayLocalISO()
   const state = foldHabit(data.events, habit, today)
@@ -62,6 +66,14 @@ function habitSettings(data: AppData, habit: Habit): string {
       <label class="field-label" for="motivation-${habit}">Motivational text</label>
       <textarea id="motivation-${habit}" class="settings-textarea" rows="3" data-motivation="${habit}">${esc(configText(data, habit))}</textarea>
       <button class="settings-action" data-save-motivation="${habit}">Save motivation</button>
+      <label class="settings-row">
+        <span>
+          <strong>Daily check-in time</strong>
+          <small>Prompt appears after this time each day</small>
+        </span>
+        <input type="time" value="${esc(checkInTime(data, habit))}" data-checkin-time="${habit}" />
+      </label>
+      <button class="settings-action" data-save-checkin-time="${habit}">Save check-in time</button>
       <label class="settings-row">
         <span>
           <strong>Correct start date</strong>
@@ -156,6 +168,16 @@ export function openSettingsSheet(root: HTMLElement, data: AppData, callbacks: S
       const habit = button.dataset.saveMotivation as Habit
       const textarea = overlay.querySelector<HTMLTextAreaElement>(`[data-motivation="${habit}"]`)
       callbacks.onData(setMotivation(data, habit, textarea?.value ?? '', new Date().toISOString()))
+      overlay.remove()
+    })
+  }
+
+  for (const button of overlay.querySelectorAll<HTMLButtonElement>('[data-save-checkin-time]')) {
+    button.addEventListener('click', () => {
+      const habit = button.dataset.saveCheckinTime as Habit
+      const input = overlay.querySelector<HTMLInputElement>(`[data-checkin-time="${habit}"]`)
+      const time = input?.value || '07:00'
+      callbacks.onData(setCheckInTime(data, habit, time, new Date().toISOString()))
       overlay.remove()
     })
   }

@@ -6,6 +6,7 @@ export const STORAGE_KEY = 'ht:appdata'
 export interface HabitConfig {
   habit: Habit
   motivationalText: string
+  checkInTime?: string // ISO time "HH:MM", e.g., "07:00"
   updatedAt: string
 }
 
