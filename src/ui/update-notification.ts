@@ -88,6 +88,13 @@ export function showUpdateNotification(
   link.textContent = "See what's new →"
   content.appendChild(link)
 
+  const actions = document.createElement('div')
+  actions.style.cssText = `
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  `
+
   const button = document.createElement('button')
   button.setAttribute('data-update-refresh', '')
   button.type = 'button'
@@ -102,12 +109,28 @@ export function showUpdateNotification(
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    flex-shrink: 0;
   `
   button.addEventListener('click', onRefresh)
 
+  const closeButton = document.createElement('button')
+  closeButton.type = 'button'
+  closeButton.textContent = '✕'
+  closeButton.style.cssText = `
+    background: transparent;
+    color: #999;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0 4px;
+  `
+  closeButton.addEventListener('click', () => hideUpdateNotification(root))
+
+  actions.appendChild(button)
+  actions.appendChild(closeButton)
+
   notification.appendChild(content)
-  notification.appendChild(button)
+  notification.appendChild(actions)
   root.appendChild(notification)
 }
 

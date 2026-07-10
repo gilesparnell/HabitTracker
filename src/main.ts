@@ -21,6 +21,11 @@ import CHANGELOG_TEXT from '../CHANGELOG.md?raw'
 const root = document.querySelector<HTMLDivElement>('#app')
 const storage: StorageLike = window.localStorage
 
+// Create a separate container for persistent notifications (outside app root)
+const notificationContainer = document.createElement('div')
+notificationContainer.id = 'notifications'
+document.body.appendChild(notificationContainer)
+
 if (root !== null) {
   boot(root, storage)
 }
@@ -32,12 +37,9 @@ if ('serviceWorker' in navigator && (import.meta.env as { readonly PROD?: boolea
     registerServiceWorker({
       onUpdateAvailable: () => {
         if (latestVersion) {
-          const root = document.querySelector<HTMLDivElement>('#app')
-          if (root) {
-            showUpdateNotification(root, latestVersion, () => {
-              window.location.reload()
-            })
-          }
+          showUpdateNotification(notificationContainer, latestVersion, () => {
+            window.location.reload()
+          })
         }
       },
     })
