@@ -13,6 +13,20 @@ Each entry is split into:
 
 ---
 
+## [0.4.0] — 2026-07-10
+
+### What's new
+- App now detects when a new version is deployed and shows a persistent toast notification at the bottom of the screen. Click "Refresh" to reload with the new version, "See what's new" to view the changelog, or the close button (✕) to dismiss.
+- New changelog page displays your full version history with feature summaries and technical details. Each version links to its specific section so you can reference past releases.
+- Version now displays in the footer as `vX.Y.Z (git-sha)` so you can tell exactly which version is running.
+
+### Under the hood
+- Service worker registers on app load and checks for updates every 60 seconds, plus on tab visibility change and app mount. When a new build is detected, it fires an `updatefound` event.
+- Changelog parsed from `CHANGELOG.md` at build time; latest version extracted and shown in notification toast via `getLatestWhatsNew()`.
+- Notification rendered in a separate DOM container outside the app root to persist across rerenders; users can interact with it or dismiss at any time.
+- Build-time injection via Vite: `__APP_SEMVER__` (from package.json), `__APP_VERSION__` (git SHA), `__BUILD_TIME__` (ISO timestamp) injected into globals.
+- Service worker BUILD_ID placeholder replaced at build time with git SHA to ensure browser detects new SW on every deploy.
+
 ## [0.3.4] — 2026-07-09
 
 ### What's new
