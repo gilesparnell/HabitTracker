@@ -13,6 +13,18 @@ Each entry is split into:
 
 ---
 
+## [0.4.1] — 2026-07-11
+
+### What's new
+- Pull-to-refresh: swipe down from the top of the screen to reload the app with the latest version. Gesture-friendly way to pick up new updates without closing and restarting.
+- Version number in the footer is now clickable — tap it to view the full changelog directly.
+
+### Under the hood
+- Touch gesture handler detects downward swipes from top of page (within 50px, distance ≥80px) and triggers reload via `createPullToRefreshHandler()`.
+- Gesture detection includes happy path, sad path, and edge cases (tests: 9 unit tests covering multiple touches, state reset, cleanup).
+- Version link integrated into both setup and main UI footers using existing changelog modal system.
+- Jsdom test environment enabled in vitest for DOM-based gesture testing.
+
 ## [0.4.0] — 2026-07-10
 
 ### What's new
