@@ -12,6 +12,11 @@ import { flashAck, renderApp, type Handlers } from './ui/render'
 import { openSettingsSheet } from './ui/settings'
 import { runFirstRun, runReauth, type SetupDeps } from './ui/setup'
 import { buildScreenModel } from './ui/viewmodel'
+import { registerServiceWorker } from './lib/serviceWorker'
+import { getLatestWhatsNew } from './lib/changelog-parser'
+import { showUpdateNotification, hideUpdateNotification } from './ui/update-notification'
+import { renderChangelogPage } from './pages/changelog'
+import CHANGELOG_TEXT from '../CHANGELOG.md?raw'
 
 const root = document.querySelector<HTMLDivElement>('#app')
 const storage: StorageLike = window.localStorage
@@ -20,10 +25,21 @@ if (root !== null) {
   boot(root, storage)
 }
 
+// Register service worker and listen for updates
 if ('serviceWorker' in navigator && (import.meta.env as { readonly PROD?: boolean }).PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // Installability must not affect the tracker itself.
+    const latestVersion = getLatestWhatsNew(CHANGELOG_TEXT)
+    registerServiceWorker({
+      onUpdateAvailable: () => {
+        if (latestVersion) {
+          const root = document.querySelector<HTMLDivElement>('#app')
+          if (root) {
+            showUpdateNotification(root, latestVersion, () => {
+              window.location.reload()
+            })
+          }
+        }
+      },
     })
   })
 }
@@ -179,6 +195,17 @@ function boot(appRoot: HTMLElement, store: StorageLike): void {
 
   rerender()
 
+  // Handle changelog navigation
+  appRoot.addEventListener('click', (event) => {
+    const link = (event.target as HTMLElement).closest('a[href*="/changelog"]')
+    if (link) {
+      event.preventDefault()
+      const href = link.getAttribute('href') || '/changelog'
+      const anchor = href.split('#')[1]
+      showChangelogPage(appRoot, anchor)
+    }
+  })
+
   if (data.session !== null) {
     void restoreSession(authClient, data.session).then((result) => {
       if (result.ok) {
@@ -192,4 +219,49 @@ function boot(appRoot: HTMLElement, store: StorageLike): void {
   }
 
   window.addEventListener('online', () => fireSync())
+}
+
+function showChangelogPage(appRoot: HTMLElement, anchor?: string): void {
+  const closeButton = appRoot.querySelector('[data-changelog-close]')
+  if (closeButton) {
+    closeButton.remove()
+  }
+
+  const changelogContainer = document.createElement('div')
+  changelogContainer.setAttribute('data-changelog-close', '')
+  changelogContainer.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9000;
+    overflow-y: auto;
+    padding: 20px;
+  `
+
+  const closeOnClick = (event: Event): void => {
+    if (event.target === changelogContainer) {
+      changelogContainer.remove()
+      changelogContainer.removeEventListener('click', closeOnClick)
+    }
+  }
+
+  changelogContainer.addEventListener('click', closeOnClick)
+  appRoot.appendChild(changelogContainer)
+
+  renderChangelogPage(changelogContainer, anchor)
+
+  // Add close button
+  const inner = changelogContainer.querySelector('.changelog-container') as HTMLElement
+  if (inner) {
+    const closeBtn = inner.querySelector('a[href="/"]') as HTMLElement
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault()
+        changelogContainer.remove()
+      })
+    }
+  }
 }

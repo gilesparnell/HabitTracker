@@ -63,9 +63,21 @@ export function undoLastRelapse(data: AppData, habit: Habit, nowISO: string): Ap
 }
 
 export function setMotivation(data: AppData, habit: Habit, text: string, nowISO: string): AppData {
+  const existing = data.config.find((c) => c.habit === habit)
   return upsertConfig(data, {
     habit,
     motivationalText: text,
+    checkInTime: existing?.checkInTime,
+    updatedAt: nowISO,
+  })
+}
+
+export function setCheckInTime(data: AppData, habit: Habit, time: string, nowISO: string): AppData {
+  const existing = data.config.find((c) => c.habit === habit)
+  return upsertConfig(data, {
+    habit,
+    motivationalText: existing?.motivationalText ?? '',
+    checkInTime: time,
     updatedAt: nowISO,
   })
 }

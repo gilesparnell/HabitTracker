@@ -66,7 +66,12 @@ export function fold(events: HabitEvent[], todayISO: string): FoldResult {
 
 export type CheckinStatus = 'none' | 'standard' | 'catchup'
 
-export function checkinStatus(state: HabitState, todayISO: string): CheckinStatus {
+export function checkinStatus(
+  state: HabitState,
+  todayISO: string,
+  now?: Date,
+  configuredTime?: string,
+): CheckinStatus {
   if (state.lastInteractionDate === null) {
     return 'none'
   }
@@ -77,7 +82,28 @@ export function checkinStatus(state: HabitState, todayISO: string): CheckinStatu
     return 'none'
   }
 
+  // Check if we've passed the configured check-in time today
+  const checkInHour = parseTimeOrDefault(configuredTime)
+  const currentHour = (now ?? new Date()).getHours()
+
+  if (currentHour < checkInHour) {
+    return 'none' // Wait until configured time
+  }
+
+  // We've passed the time threshold and need a check-in
   return daysBetween(lastInteractionDate, todayISO) === 1 ? 'standard' : 'catchup'
+}
+
+function parseTimeOrDefault(timeString?: string): number {
+  if (!timeString) return 7 // default 07:00
+
+  const match = timeString.match(/^(\d{1,2}):(\d{2})$/)
+  if (!match) return 7 // invalid format, use default
+
+  const hour = parseInt(match[1], 10)
+  if (hour < 0 || hour > 23) return 7 // out of range, use default
+
+  return hour
 }
 
 function activeHabitEvents(events: HabitEvent[]): HabitEvent[] {

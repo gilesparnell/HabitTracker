@@ -683,9 +683,9 @@ button {
 .setup-primary {
   width: 100%;
   margin-top: 16px;
-  border: 1px solid rgba(56, 191, 160, 0.45);
-  background: linear-gradient(180deg, rgba(56, 191, 160, 0.22), rgba(56, 191, 160, 0.12));
-  color: #7fe0c8;
+  border: none;
+  background: linear-gradient(180deg, #4ee08b, #22d3ee);
+  color: #053a2a;
 }
 
 .setup-secondary {

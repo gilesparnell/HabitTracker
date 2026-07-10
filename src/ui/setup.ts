@@ -9,6 +9,7 @@ import { mergeEvents, resolveStartupState, syncOnce } from '../sync/engine'
 import type { SyncTransport } from '../sync/transport'
 import { DEFAULT_MOTIVATION, HABIT_LABELS } from './viewmodel'
 import { initDeviceMilestones, normalizeOtpCode } from './actions'
+import { requestCodeWithRetry, createSetupLogger } from './setup-enhanced'
 
 export interface SetupDeps {
   authClient: AuthClient
@@ -29,7 +30,7 @@ function setupUserId(data: AppData): string {
   return data.session?.userId ?? 'local'
 }
 
-function authEmailScreen(root: HTMLElement, title: string, body: string, onSubmit: (email: string) => void, error: string | null): void {
+function authEmailScreen(root: HTMLElement, title: string, body: string, onSubmit: (email: string) => void, error: string | null, isLoading = false): void {
   root.innerHTML = `
     <section class="setup-panel" aria-labelledby="setup-title">
       <p class="kicker">Device setup</p>
@@ -37,8 +38,8 @@ function authEmailScreen(root: HTMLElement, title: string, body: string, onSubmi
       <p class="setup-copy">${esc(body)}</p>
       ${error ? `<p class="setup-error" role="alert">${esc(error)}</p>` : ''}
       <label class="field-label" for="setup-email">Email</label>
-      <input class="text-input" id="setup-email" type="email" autocomplete="email" inputmode="email" />
-      <button class="setup-primary" data-email-next>Send code</button>
+      <input class="text-input" id="setup-email" type="email" autocomplete="email" inputmode="email" ${isLoading ? 'disabled' : ''} />
+      <button class="setup-primary" data-email-next ${isLoading ? 'disabled' : ''}>${isLoading ? 'Sending...' : 'Send code'}</button>
     </section>
   `
 
@@ -47,7 +48,7 @@ function authEmailScreen(root: HTMLElement, title: string, body: string, onSubmi
   input?.focus()
   button?.addEventListener('click', () => onSubmit(input?.value.trim() ?? ''))
   input?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !isLoading) {
       onSubmit(input.value.trim())
     }
   })
@@ -190,28 +191,40 @@ async function pullStartup(root: HTMLElement, data: AppData, deps: SetupDeps, on
 }
 
 export function runFirstRun(root: HTMLElement, data: AppData, deps: SetupDeps, onComplete: (data: AppData) => void): void {
-  const showEmail = (error: string | null = null): void => {
+  const logger = createSetupLogger((msg) => console.log(msg))
+
+  const showEmail = (error: string | null = null, isLoading = false): void => {
     authEmailScreen(root, 'Sign in once on this device', 'Your streaks work offline, then sync to your private backup.', async (email) => {
-      const result = await requestCode(deps.authClient, email)
+      showEmail(null, true)
+      logger.requestStart(email)
+
+      const result = await requestCodeWithRetry(deps.authClient, email, {
+        maxRetries: 2,
+        timeout: 10000,
+        onError: (error, attempt) => logger.requestError(error, attempt ?? 1),
+      })
 
       if (!result.ok) {
-        showEmail(result.error)
+        showEmail(result.error, false)
         return
       }
 
       showCode(email)
-    }, error)
+    }, error, isLoading)
   }
 
   const showCode = (email: string, error: string | null = null): void => {
     authCodeScreen(root, email, async (code) => {
+      logger.verifyStart(code)
       const result = await verifyCode(deps.authClient, email, code)
 
       if (!result.ok) {
+        logger.verifyError(result.error, 1)
         showCode(email, result.error)
         return
       }
 
+      logger.verifySuccess(result.session.userId)
       const withSession = setSession(data, result.session)
       await pullStartup(root, withSession, deps, onComplete)
     }, () => showEmail(), error)
