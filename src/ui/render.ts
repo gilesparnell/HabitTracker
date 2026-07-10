@@ -82,7 +82,7 @@ export function renderApp(root: HTMLElement, model: ScreenModel, handlers: Handl
         <main class="placeholder" data-setup-root>
           <p>Welcome. Setup starts with a one-time sign-in.<br />This screen is completed in the device-setup flow.</p>
         </main>
-        <footer>${esc(versionLabel())}</footer>
+        <footer><a href="/changelog" data-changelog-link>${esc(versionLabel())}</a></footer>
       </div>
     `
     return
@@ -106,7 +106,7 @@ export function renderApp(root: HTMLElement, model: ScreenModel, handlers: Handl
         ${counterCard(model, 'vape')}
         ${counterCard(model, 'drink')}
       </main>
-      <footer>${esc(versionLabel())}</footer>
+      <footer><a href="/changelog" data-changelog-link>${esc(versionLabel())}</a></footer>
     </div>
     ${model.prompt ? checkinSheet(model.prompt, answeredToday, 2) : ''}
   `

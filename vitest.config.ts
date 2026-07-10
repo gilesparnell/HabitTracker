@@ -7,7 +7,7 @@ process.env.TZ = 'Australia/Sydney'
 
 export default defineConfig({
   test: {
-    environment: 'node',
+    environment: 'jsdom',
     globals: false,
   },
 })

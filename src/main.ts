@@ -16,6 +16,7 @@ import { registerServiceWorker } from './lib/serviceWorker'
 import { getLatestWhatsNew } from './lib/changelog-parser'
 import { showUpdateNotification, hideUpdateNotification } from './ui/update-notification'
 import { renderChangelogPage } from './pages/changelog'
+import { createPullToRefreshHandler } from './ui/pull-to-refresh'
 import CHANGELOG_TEXT from '../CHANGELOG.md?raw'
 
 const root = document.querySelector<HTMLDivElement>('#app')
@@ -206,6 +207,11 @@ function boot(appRoot: HTMLElement, store: StorageLike): void {
       const anchor = href.split('#')[1]
       showChangelogPage(appRoot, anchor)
     }
+  })
+
+  // Setup pull-to-refresh on the app element
+  const pullToRefresh = createPullToRefreshHandler(appRoot, () => {
+    window.location.reload()
   })
 
   if (data.session !== null) {
