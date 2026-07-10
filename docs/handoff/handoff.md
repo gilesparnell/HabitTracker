@@ -2,13 +2,39 @@
 
 Append newest-first handoff entries here with current state, runner, next step, and gotchas.
 
+## 2026-07-11 AEST — v0.4.1 complete; pull-to-refresh + clickable version; PR #14 auto-merge queued
+**Runner:** Claude (planning, TDD, integration). **State:** PR #14 queued for auto-merge on CI green; will deploy to production within minutes. **Next:** Giles verifies update notification appears on next app visit (currently on v0.4.0; should see update to v0.4.1).
+
+Completed this session:
+- **Pull-to-refresh gesture handler** (`src/ui/pull-to-refresh.ts`): TDD'd with 9 unit tests covering happy path (80px threshold from top), sad path (upward swipes, touches not from top), and edge cases (multiple touches, state reset, cleanup). Detects swipe-down within 50px of top; triggers reload when distance ≥80px. Fully tested, zero regressions.
+- **Clickable version footer** (`src/ui/render.ts`): version number in footer now links to `/changelog`; existing click handler opens modal overlay. Added CSS styling (pointer cursor, underline on hover, inherits footer colour).
+- **Jsdom test environment** (`vitest.config.ts`): switched from `node` to `jsdom` to enable DOM-based gesture testing. Added `jsdom` to devDependencies.
+- **Version bumped** to 0.4.1 (`package.json`, `CHANGELOG.md`). Entry covers both features + technical details (threshold values, test count, environment change).
+- **PR #14 created and queued**: contains all 9 new tests, new modules, version bump, CHANGELOG, and integration into `main.ts`. 145+ tests passing (9 new pull-to-refresh + 136 existing).
+
+How update detection works (for reference — Giles asked for explanation):
+- Service worker file (`public/sw.js`) has placeholder `__HT_BUILD_ID__` replaced at build time with git SHA
+- Every deploy changes the SHA → SW file content changes → browser detects new version immediately (no waiting 24h)
+- App listens for `updatefound` event; when new SW installs, triggers callback → shows update notification
+- App also forces checks every 60s, on tab visibility change, and on mount
+- Stale-while-revalidate caching: serve from cache instantly, fetch fresh in background, update cache
+- Supabase requests bypass cache (real-time data)
+
+Gotchas / next session notes:
+- PR #14 will auto-merge once CI passes (status checks: Lint · Test · Build, Vercel). Giles should see v0.4.1 live within 5–10 minutes.
+- The update notification tests (`src/ui/update-notification.test.ts`) verify the feature end-to-end; pull-to-refresh tests are unit-focused (gesture detection only, not reload).
+- Vitest environment switch to jsdom may affect other tests if any relied on `node` environment assumptions. Currently passing, but worth noting if future tests fail with unexpected errors.
+- Pre-existing failure in `src/domain/fold.test.ts` (checkinStatus branch test) is still present — unrelated to this session's changes. Needs investigation in a future session if it's a regression or a timezone/calendar boundary condition.
+
+Current deployed version: v0.4.0 (live since 10 Jul). User on phone is v0.4.0; expected to see update notification for v0.4.1 on next visit after deploy.
+
 ## 2026-07-09 AEST — v0.3.3 live; post-ship bug saga resolved; custom domain pending DNS
 **Runner:** Claude (diagnosis + fixes). **Next:** Giles confirms phone persistence on v0.3.3; Porkbun A record (habits -> 76.76.21.21) propagates -> https://habits.parnellsystems.com.
 
 Shipped since launch (all via PR, merged on green):
 - 0.3.1 (`PR #3`): OTP input maxlength 6 -> 12 (project issues 8-digit codes, not Supabase's default 6).
 - 0.3.2 (`PR #4`): the REAL truncation fix — a JS input handler still sliced codes to 6 digits; caught via DevTools payload (`token: "769382"` for code `76938237`). `normalizeOtpCode` + regression tests.
-- 0.3.3 (`PR #5`): phone sign-out loop — Postgres nulls in optional event fields (`kind`, `target_id`) failed the stored-data validator, so cloud-RESTORED devices wiped their own save on every relaunch ("Stored data is not valid HabitTracker data"). First devices (local-born events) unaffected — why the Mac worked and the phone looped. Normalized at transport pull + load, regression tests.
+- 0.3.3 (`PR #5`): phone sign-out loop — Postgres nulls in optional event fields (`kind`, `target_id`) failed the stored-data validator, so cloud-RESTORED devices wiped their own save on every relaunch ("Stored data is not valid HabitTracker data"). First devices (local-born events) unaffected — why the Mac worked and the phone looped. Normalised at transport pull + load, regression tests.
 
 Live infra changes (audit trail):
 - Signup-confirmation email template: added {{ .Token }} alongside link (Jackie/new-user path). Magic-link template already done. Both verified by read-back.
