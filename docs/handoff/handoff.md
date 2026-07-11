@@ -2,6 +2,16 @@
 
 Append newest-first handoff entries here with current state, runner, next step, and gotchas.
 
+## 2026-07-11 AEST (later session) — v0.5.0: check-in time feature closed out; earlier "PR #14 blocked" state is resolved
+**Runner:** Claude (triage, docs, verification) + Codex (settings regression tests). **State:** branch `feat/checkin-time`, PR queued for v0.5.0. **Next:** merge PR on green; Giles confirms the time picker on his phone once deployed.
+
+Key discovery: the customisable check-in time feature (plan `2026-07-10-001`) was **already fully implemented and live** — `checkinStatus()` time threshold, `HabitConfig.checkInTime`, `setCheckInTime()`, settings time picker, and viewmodel wiring all shipped silently inside the 0.4.0-era PRs, with domain tests included. It was never announced in the CHANGELOG and the settings save flow had no test coverage. This session closed those gaps:
+- `src/ui/settings.test.ts` (Codex, 5 tests): defaults, stored values, save flow + overlay removal, empty-input fallback, cross-habit isolation. Suite 151/151.
+- Version 0.4.1 → 0.5.0; CHANGELOG entry announces the feature and notes it shipped earlier.
+- Plan `2026-07-10-001` status → completed.
+
+Also resolved from the previous entry: the fold.test.ts failure that blocked PR #14 was fixed and #14 **merged** (12:21 am AEST 11 Jul); v0.4.1 deployed. Local `main` had diverged from origin (duplicate pre-squash commits) — reset hard to origin/main, nothing lost. PR #13 is stale/superseded by #14 and should be closed.
+
 ## 2026-07-11 AEST — v0.4.1 complete; pull-to-refresh + clickable version; PR #14 blocked on pre-existing test failure
 **Runner:** Claude (planning, TDD, integration). **State:** PR #14 created with all changes ready, but CI blocking merge on pre-existing `fold.test.ts` failure (unrelated to this session). **Next:** Either (a) fix the pre-existing `fold.test.ts` checkinStatus branch test, or (b) skip/quarantine that test with a tracking issue. Once CI passes, PR will auto-merge and deploy v0.4.1.
 
