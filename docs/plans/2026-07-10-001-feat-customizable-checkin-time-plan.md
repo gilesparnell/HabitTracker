@@ -1,7 +1,7 @@
 ---
 title: feat: Customisable Daily Check-In Time
 type: feat
-status: active
+status: completed
 date: 2026-07-10
 ---
 

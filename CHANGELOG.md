@@ -13,6 +13,18 @@ Each entry is split into:
 
 ---
 
+## [0.5.0] — 2026-07-11
+
+### What's new
+- Choose your own daily check-in time. The yes/no check-in question now waits until your preferred time each day (7:00 AM by default) instead of appearing whenever you first open the app — no more facing the question late at night. Set it per habit in Settings under "Daily check-in time".
+- Once you've answered, the question stays away until your chosen time the next day.
+
+### Under the hood
+- `checkinStatus()` (`src/domain/fold.ts`) gained optional `now` and `configuredTime` params: prompt suppressed until `now.getHours()` reaches the configured hour; invalid or missing time strings fall back to 07:00 via `parseTimeOrDefault()`.
+- `HabitConfig.checkInTime` ("HH:MM") added to the store schema with the same last-write-wins semantics as motivational text; saved through `setCheckInTime()` in `src/ui/actions.ts`.
+- Settings sheet renders a native `<input type="time">` per habit with a "Save check-in time" button (`src/ui/settings.ts`); `buildScreenModel()` threads the configured time into the check-in logic.
+- The implementation itself shipped quietly inside the 0.4.0-era PRs; this release adds the missing announcement plus 5 new settings-sheet regression tests covering the save flow (defaults, stored values, fallback, cross-habit isolation). Suite now 151 tests.
+
 ## [0.4.1] — 2026-07-11
 
 ### What's new

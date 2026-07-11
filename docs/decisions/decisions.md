@@ -2,6 +2,9 @@
 
 Append project-local tactical decisions here with date, title, rationale, and links.
 
+## 2026-07-11 AEST — Check-in time feature announced retroactively as 0.5.0 (minor), not patched
+Discovered the feature had already shipped silently inside 0.4.0-era PRs. Chose a minor bump (0.5.0) with a fresh CHANGELOG entry over extending the 0.4.x range: it's a new user-visible feature that was never announced, and the footer version should let Giles answer "is this the build with the time picker?" at a glance. The entry states explicitly that the code shipped earlier. Residual implementation work (settings regression tests) routed to Codex per routing rules; docs/version stayed with Claude.
+
 ## 2026-07-08 AEST — Overnight merge + deploy authorised; single-writer execution
 Giles authorised (via main-session relay): public repo, giles@parnellsystems.com as the auth identity, all three live WLC changes (migration, email template token, redirect allowlist), and merge-to-production on green CI without morning review. Separately: after a two-executor collision corrupted a committed test file and duplicated infrastructure, execution is single-writer — one agent owns the tree, Codex runs are strictly sequential, and every unit is verified (suite/lint/build/scope) before commit.
 
